@@ -21,7 +21,7 @@ namespace ConsoleApp1
 				.Add(c=> c.Number,
 					c=> c.Number,
 					c=> c.ToString())
-
+				.Add("FirstName", "Name")
 				.Build();
 
 			var test = new Test
@@ -41,11 +41,13 @@ namespace ConsoleApp1
 	{
 		public string Id { get; set; }
 		public int Number { get; set; }
+		public string FirstName { get; set; }
 	}
 
 	public class Test2
 	{
 		public string Id { get; set; }
 		public string Number { get; set; }
+		public string Name { get; set; }
 	}
 }
