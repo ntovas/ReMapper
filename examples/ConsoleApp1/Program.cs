@@ -15,8 +15,6 @@ namespace ConsoleApp1
 		{
 			Console.WriteLine("Hello World!");
 
-			var tmp = new List<Test>().AsQueryable();
-
 			var mapper = new ReMapper()
 				.AddBuilder<Test, Test2>()
 				.Add("Id")
@@ -50,7 +48,4 @@ namespace ConsoleApp1
 		public string Id { get; set; }
 		public string Number { get; set; }
 	}
-
-
-
 }
