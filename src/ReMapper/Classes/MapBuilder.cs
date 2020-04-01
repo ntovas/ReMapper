@@ -1,16 +1,13 @@
-﻿using ReMap.AbstractClasses;
-using ReMap.ExpressionHelpers;
+﻿using ReMap.ExpressionHelpers;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace ReMap.Classes
 {
-	public class MapBuilder<TSource, TResult> : MapBuilder
+	public class MapBuilder<TSource, TResult>
 	{
 		private readonly ReMapper _reMapper;
-
-		private Action<TSource, TResult> _converter;
 
 		private readonly List<PropertyConfiguration<TSource, TResult>> _propertyList = new List<PropertyConfiguration<TSource, TResult>>();
 
@@ -24,7 +21,7 @@ namespace ReMap.Classes
 			_propertyList.Add(property);
 		}
 
-		internal ReMapper BuildMappedList()
+		internal ReMapper BuildMapping()
 		{
 			var mappedList = new List<MappedProperty<TSource, TResult>>();
 			foreach (var property in _propertyList)
@@ -74,16 +71,22 @@ namespace ReMap.Classes
 				mappedList.Add(mappedProperty);
 			}
 
-			_converter = ExpressionHelper.BuildMapAction<TSource, TResult>(mappedList);
+			var converter = ExpressionHelper.BuildMapAction<TSource, TResult>(mappedList);
 
-			_reMapper.AddToConverters((typeof(TSource), typeof(TResult)), this);
+			_reMapper.AddToConverters((typeof(TSource), typeof(TResult)), converter);
+
+			BuildGenerators<TSource>();
+			BuildGenerators<TResult>();
 
 			return _reMapper;
 		}
 
-		internal override void Convert(object source, object target)
+		internal void BuildGenerators<T>()
 		{
-			_converter((TSource) source, (TResult) target);
+			var func = ExpressionHelper.GetInstanceFunc<T>();
+			_reMapper.AddToGenerators(typeof(T), func);
 		}
+
+
 	}
 }

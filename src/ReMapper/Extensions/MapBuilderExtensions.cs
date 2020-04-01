@@ -193,18 +193,13 @@ namespace ReMap.Extensions
 
 		public static ReMapper Build<TSource, TResult>(this MapBuilder<TSource, TResult> builder)
 		{
-			return builder.BuildMappedList();
+			return builder.BuildMapping();
 		}
 
 		public static ReMapper Build<TSource, TResult>(this MapBuilderChainHelper<TSource, TResult> builderHelper)
 		{
-			return builderHelper.Builder.BuildMappedList();
+			return builderHelper.Builder.BuildMapping();
 		}
 
-
-		public static MapBuilderChainHelper<T, R> Test<T, R, Q,S>(this MapBuilderChainHelper<T, R> builder, Func<T,Q> func, Func<R,S> func2, Func<Q,S> func3)
-		{
-			return builder;
-		}
 	}
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using ReMap.AbstractClasses;
-
-namespace ReMap.Classes
+﻿namespace ReMap.Classes
 {
 	public class MapBuilderChainHelper<TSource, TResult>
 	{

@@ -50,10 +50,6 @@ namespace ReMap.ExpressionHelpers
 				{
 					var expr = Expression.Invoke(propertyInfo.MappingFunc, value);
 					value = expr;
-					if (value.Type != targetProperty.Type)
-					{
-						value = Expression.Convert(value, targetProperty.Type);
-					}
 					statement = Expression.Assign(targetProperty, value);
 				}
 				else
@@ -86,6 +82,13 @@ namespace ReMap.ExpressionHelpers
 			var lambda = Expression.Lambda<Action<TSource, TTarget>>(body, source, target);
 
 			return lambda.Compile();
+		}
+
+		public static Func<T> GetInstanceFunc<T>()
+		{
+			return Expression.Lambda<Func<T>>(
+				Expression.New(typeof(T))
+			).Compile();
 		}
 	}
 }

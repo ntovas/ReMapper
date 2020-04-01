@@ -15,14 +15,25 @@ namespace ConsoleApp1
 		{
 			Console.WriteLine("Hello World!");
 
-			var mapper = new ReMapper()
-				.AddBuilder<Test, Test2>()
-				.Add("Id")
-				.Add(c=> c.Number,
-					c=> c.Number,
-					c=> c.ToString())
-				.Add("FirstName", "Name")
-				.Build();
+			var mapper = new ReMapper();
+			mapper.AddBuilder<Test, Test2>()
+			.Add("Id")
+			.Add(c => c.Number,
+				c => c.Number,
+				c => c.ToString())
+			.Add("FirstName", "Name")
+			.Build();
+
+			mapper.AddBuilder<TestList, TestList2>()
+			.Add("Name")
+			.Add(c => c.List,
+				c => c.Count,
+				c => c.Count)
+			.Add(c => c.List,
+				c => c.List,
+				c=> c.Select(i=>
+					mapper.Convert<Test, Test2>(i)).ToList())
+			.Build();
 
 			var test = new Test
 			{
@@ -31,9 +42,15 @@ namespace ConsoleApp1
 				FirstName = "Name"
 			};
 
-			var test2 = new Test2();
-			mapper.Convert(test, test2);
+			var list = new TestList
+			{
+				Name = "Test",
+				List = new List<Test> { test }
+			};
 
+
+			var testlist2 = mapper.Convert<TestList, TestList2>(list);
+			
 			Console.ReadLine();
 		}
 	}
@@ -50,5 +67,18 @@ namespace ConsoleApp1
 		public string Id { get; set; }
 		public string Number { get; set; }
 		public string Name { get; set; }
+	}
+
+	public class TestList
+	{
+		public string Name { get; set; }
+		public List<Test> List { get; set; }
+	}
+
+	public class TestList2
+	{
+		public string Name { get; set; }
+		public int Count { get; set; }
+		public List<Test2> List { get; set; }
 	}
 }
