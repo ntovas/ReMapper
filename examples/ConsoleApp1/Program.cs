@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using ReMap;
 using ReMap.Classes;
@@ -13,11 +15,15 @@ namespace ConsoleApp1
 		{
 			Console.WriteLine("Hello World!");
 
+			var tmp = new List<Test>().AsQueryable();
+
 			var mapper = new ReMapper()
 				.AddBuilder<Test, Test2>()
-				.Add(t => t.Id,
-					t => t.Id)
-				.Add("Number")
+				.Add("Id")
+				.Add(c=> c.Number,
+					c=> c.Number,
+					c=> c.ToString())
+
 				.Build();
 
 			var test = new Test
@@ -42,6 +48,9 @@ namespace ConsoleApp1
 	public class Test2
 	{
 		public string Id { get; set; }
-		public int Number { get; set; }
+		public string Number { get; set; }
 	}
+
+
+
 }

@@ -8,28 +8,34 @@ namespace ReMap.ExpressionHelpers
 {
 	public static class ExpressionHelper
 	{
-		public static PropertyInfo GetPropertyFromExpression<T>(Expression<Func<T, object>> getPropertyLambda)
+		public static PropertyInfo GetPropertyFromExpression(Expression getPropertyLambda)
 		{
 			MemberExpression exp;
-
-			switch (getPropertyLambda.Body)
+			var t = getPropertyLambda as LambdaExpression;
+			
+			if (getPropertyLambda is LambdaExpression exprFunc)
 			{
-				case UnaryExpression unExp when unExp.Operand is MemberExpression operand:
-					exp = operand;
-					break;
-				case UnaryExpression unExp:
-					throw new ArgumentException();
-				case MemberExpression body:
-					exp = body;
-					break;
-				default:
-					throw new ArgumentException();
+				switch (exprFunc.Body)
+				{
+					case UnaryExpression unExp when unExp.Operand is MemberExpression operand:
+						exp = operand;
+						break;
+					case UnaryExpression unExp:
+						throw new ArgumentException();
+					case MemberExpression body:
+						exp = body;
+						break;
+					default:
+						throw new ArgumentException();
+				}
+
+				return (PropertyInfo)exp.Member;
 			}
 
-			return (PropertyInfo)exp.Member;
+			throw new ArgumentException();
 		}
 
-		public static Action<TSource, TTarget> BuildMapAction<TSource, TTarget>(IEnumerable<MappedProperty> properties)
+		public static Action<TSource, TTarget> BuildMapAction<TSource, TTarget>(IEnumerable<MappedProperty<TSource, TTarget>> properties)
 		{
 			var source = Expression.Parameter(typeof(TSource), "source");
 			var target = Expression.Parameter(typeof(TTarget), "target");
@@ -41,15 +47,30 @@ namespace ReMap.ExpressionHelpers
 				var targetProperty = Expression.Property(target, propertyInfo.TargetProperty);
 				Expression value = sourceProperty;
 
-				if (value.Type != targetProperty.Type)
-					value = Expression.Convert(value, targetProperty.Type);
-				Expression statement = Expression.Assign(targetProperty, value);
-				
-				if (!sourceProperty.Type.IsValueType || Nullable.GetUnderlyingType(sourceProperty.Type) != null)
+				Expression statement;
+				if (propertyInfo.MappingFunc != null)
 				{
-					var valueNotNull = Expression.NotEqual(sourceProperty, Expression.Constant(null, sourceProperty.Type));
-					statement = Expression.IfThen(valueNotNull, statement);
+					var expr = Expression.Invoke(propertyInfo.MappingFunc, value);
+					value = expr;
+					if (value.Type != targetProperty.Type)
+					{
+						value = Expression.Convert(value, targetProperty.Type);
+					}
+					statement = Expression.Assign(targetProperty, value);
 				}
+				else
+				{
+					if (value.Type != targetProperty.Type)
+						value = Expression.Convert(value, targetProperty.Type);
+					statement = Expression.Assign(targetProperty, value);
+
+					if (!sourceProperty.Type.IsValueType || Nullable.GetUnderlyingType(sourceProperty.Type) != null)
+					{
+						var valueNotNull = Expression.NotEqual(sourceProperty, Expression.Constant(null, sourceProperty.Type));
+						statement = Expression.IfThen(valueNotNull, statement);
+					}
+				}
+
 				statements.Add(statement);
 			}
 
@@ -68,5 +89,5 @@ namespace ReMap.ExpressionHelpers
 
 			return lambda.Compile();
 		}
-    }
+	}
 }

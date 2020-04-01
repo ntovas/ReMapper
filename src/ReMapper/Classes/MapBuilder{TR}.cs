@@ -19,14 +19,14 @@ namespace ReMap.Classes
 			_reMapper = reMapper;
 		}
 
-		internal void AddPropertyGetter(PropertyConfiguration<TSource, TResult> property)
+		internal void AddProperty(PropertyConfiguration<TSource, TResult> property)
 		{
 			_propertyList.Add(property);
 		}
 
 		internal ReMapper BuildMappedList()
 		{
-			var mappedList = new List<MappedProperty>();
+			var mappedList = new List<MappedProperty<TSource, TResult>>();
 			foreach (var property in _propertyList)
 			{
 				PropertyInfo sourceProperty = null;
@@ -64,7 +64,7 @@ namespace ReMap.Classes
 					continue;
 				}
 
-				var mappedProperty = new MappedProperty
+				var mappedProperty = new MappedProperty<TSource,TResult>
 				{
 					SourceProperty = sourceProperty,
 					TargetProperty = targetProperty,
