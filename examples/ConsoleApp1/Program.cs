@@ -27,7 +27,8 @@ namespace ConsoleApp1
 			var test = new Test
 			{
 				Id = "Test",
-				Number = 2
+				Number = 2,
+				FirstName = "Name"
 			};
 
 			var test2 = new Test2();

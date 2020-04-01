@@ -11,8 +11,6 @@ namespace ReMap.ExpressionHelpers
 		public static PropertyInfo GetPropertyFromExpression(Expression getPropertyLambda)
 		{
 			MemberExpression exp;
-			var t = getPropertyLambda as LambdaExpression;
-			
 			if (getPropertyLambda is LambdaExpression exprFunc)
 			{
 				switch (exprFunc.Body)
