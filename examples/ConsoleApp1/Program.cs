@@ -9,60 +9,6 @@ using ReMap.Extensions;
 
 namespace ConsoleApp1
 {
-	class Program
-	{
-		static void Main(string[] args)
-		{
-			Console.WriteLine("Hello World!");
-
-			var mapper = new ReMapper();
-			mapper.AddBuilder<Test, Test2>()
-			.MapField("Id")
-			.MapField(from => from.Number,
-				to => to.Number,
-				from => from.ToString())
-			.MapField("FirstName", "Name")
-			.Reverse()
-			.MapField(nameof(Test.Id))
-			.MapField(to=> to.Number, obj=> int.Parse(obj.Number))
-			.MapField(nameof(Test2.Name), nameof(Test.FirstName))
-			.Build();
-
-			mapper.AddBuilder<TestList, TestList2>()
-			.MapField("Name")
-			.MapField(to=> to.Count, from=> from.List.Count)
-			.MapField(from => from.List,
-				to => to.List,
-				 from => 
-					from.Select(i=> 
-						mapper.Convert<Test,Test2>(i)).ToList())
-			.Build();
-
-			var test = new Test
-			{
-				Id = "Test",
-				Number = 2,
-				FirstName = "Name"
-			};
-
-			var list = new TestList
-			{
-				Name = "Test",
-				List = new List<Test> { test }
-			};
-
-			var test2 = new Test2();
-
-			mapper.Convert(test, test2);
-
-			var testlist2 = mapper.Convert<TestList, TestList2>(list);
-
-			var testlist = mapper.Convert<TestList2, TestList>(testlist2);
-
-			Console.ReadLine();
-		}
-	}
-
 	public class Test
 	{
 		public string Id { get; set; }
@@ -89,5 +35,62 @@ namespace ConsoleApp1
 		public string Name { get; set; }
 		public int Count { get; set; }
 		public List<Test2> List { get; set; }
+	}
+
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			Console.WriteLine("Hello World!");
+
+			var mapper = new ReMapper();
+
+			mapper.AddBuilder<Test, Test2>()
+			.MapField("Id")
+			.MapField(from => from.Number,
+				to => to.Number, 
+				i => i.ToString())
+			.MapField("FirstName", "Name")
+			.Reverse()
+			.MapField(nameof(Test2.Id))
+			.MapField(c=> c.Name, to=> to.FirstName)
+			.MapField(from=> from.Number,
+				to=> to.Number,
+				s => int.Parse(s))
+			.Build();
+
+			mapper.AddBuilder<TestList, TestList2>()
+			.MapField("Name")
+			.MapField(to=> to.Count, from=> from.List.Count)
+			.MapField(from => from.List,
+				to => to.List)
+			
+			.Reverse()
+			.MapAll()
+			.Build();
+
+			var test = new Test
+			{
+				Id = "Test",
+				Number = 2,
+				FirstName = "Name"
+			};
+
+			var list = new TestList
+			{
+				Name = "Test",
+				List = new List<Test> { test }
+			};
+
+			var test2 = new Test2();
+
+			mapper.Convert(test, test2);
+
+			var testlist2 = mapper.Convert<TestList, TestList2>(list);
+
+			var testlist = mapper.Convert<TestList2, TestList>(testlist2);
+
+			Console.ReadLine();
+		}
 	}
 }

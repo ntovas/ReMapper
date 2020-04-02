@@ -80,8 +80,6 @@ namespace ReMap.ExpressionHelpers
 					}
 				}
 
-				
-
 				statements.Add(statement);
 			}
 

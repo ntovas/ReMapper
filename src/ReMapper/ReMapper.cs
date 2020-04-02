@@ -6,17 +6,27 @@ namespace ReMap
 {
 	public class ReMapper
 	{
-		private static Dictionary<(Type, Type), Delegate> _converters;
+		private static Dictionary<(Type, Type), Delegate> _mappers;
+		private static Dictionary<(Type, Type), Expression> _converters;
 		private static Dictionary<Type, Delegate> _generators;
 
 		private static bool _initialized = false;
 		public ReMapper()
 		{
-			_converters = new Dictionary<(Type, Type), Delegate>();
+			_mappers = new Dictionary<(Type, Type), Delegate>();
+			_converters = new Dictionary<(Type, Type), Expression>();
 			_generators = new Dictionary<Type, Delegate>();
 		}
 
-		internal void AddToConverters((Type, Type) types, Delegate converter)
+		internal void AddToMappers((Type, Type) types, Delegate mapper)
+		{
+			if (!_mappers.ContainsKey(types))
+			{
+				_mappers.Add(types, mapper);
+			}
+		}
+
+		internal void AddToConverters((Type, Type) types, Expression converter)
 		{
 			if (!_converters.ContainsKey(types))
 			{
@@ -32,29 +42,58 @@ namespace ReMap
 			}
 		}
 
-		public void Convert<TSource, TResult>(TSource source, TResult result)
+		internal bool CanConvert(Type source, Type result)
 		{
-			var key = (typeof(TSource), typeof(TResult));
+			var key = (source, result);
 
+			return _mappers.ContainsKey(key) || _converters.ContainsKey(key);
+		}
+
+		internal Func<TSource, TResult> GetConverter<TSource, TResult>()
+		{
+			Func<TSource, TResult> func = source => Convert<TSource, TResult>(source);
+			return func;
+		}
+
+		internal Expression GetConverterExpression(Type source, Type target)
+		{
+			var key = (source,target);
 			if (!_converters.ContainsKey(key))
 			{
 				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
 			}
 
-			((Action<TSource, TResult>)_converters[key]).Invoke(source, result);
+			return _converters[key];
+		}
+
+		public void Convert<T, R>(T source, R result)
+		{
+			var key = (typeof(T), typeof(R));
+
+			if (!_mappers.ContainsKey(key))
+			{
+				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
+			}
+
+			((Action<T, R>)_mappers[key]).Invoke(source, result);
 
 		}
 
-		public TResult Convert<TSource, TResult>(TSource source)
+		public R Convert<T, R>(T source)
 		{
-			var key = (typeof(TSource), typeof(TResult));
+			var key = (typeof(T), typeof(R));
 
-			if (!_converters.ContainsKey(key))
+			if (!_mappers.ContainsKey(key) && !_converters.ContainsKey(key))
 			{
 				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
 			}
 
-			var result = GetInstance<TResult>();
+			if (_converters.ContainsKey(key))
+			{
+				return ((Expression<Func<T, R>>)_converters[key]).Compile().Invoke(source);
+			}
+
+			var result = GetInstance<R>();
 
 			Convert(source, result);
 

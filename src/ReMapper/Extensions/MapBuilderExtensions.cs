@@ -74,6 +74,14 @@ namespace ReMap.Extensions
 			return builder;
 		}
 
+		public static MapBuilder<TSource, TResult> Map<TSource, TResult>(
+			this MapBuilder<TSource, TResult> builder,
+			Expression<Func<TSource, TResult>> convert)
+		{
+			
+			return builder;
+		}
+
 		public static MapBuilder<TSource, TResult> MapField<TSource, TResult>(
 			this MapBuilder<TSource, TResult> builder,
 			string from)

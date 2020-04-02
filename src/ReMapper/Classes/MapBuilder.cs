@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace ReMap.Classes
@@ -62,6 +63,17 @@ namespace ReMap.Classes
 					continue;
 				}
 
+				if (property.MappingFunc == null && sourceProperty?.PropertyType != targetProperty.PropertyType)
+				{
+					var res = _reMapper.CanConvert(sourceProperty?.PropertyType, targetProperty.PropertyType);
+
+					if (res)
+					{
+						property.MappingFunc = 
+							_reMapper.GetConverterExpression(sourceProperty?.PropertyType, targetProperty.PropertyType);
+					}
+				}
+
 				var mappedProperty = new MappedProperty<TSource,TResult>
 				{
 					SourceProperty = sourceProperty,
@@ -74,10 +86,12 @@ namespace ReMap.Classes
 
 			var converter = ExpressionHelper.BuildMapAction<TSource, TResult>(mappedList);
 
-			_reMapper.AddToConverters((typeof(TSource), typeof(TResult)), converter);
+			_reMapper.AddToMappers((typeof(TSource), typeof(TResult)), converter);
 
 			BuildGenerators<TSource>();
 			BuildGenerators<TResult>();
+
+			BuildConvertersForGenerics();
 
 			return _reMapper;
 		}
@@ -89,10 +103,22 @@ namespace ReMap.Classes
 
 		internal void BuildGenerators<T>()
 		{
-			var func = ExpressionHelper.GetInstanceFunc<T>();
-			_reMapper.AddToGenerators(typeof(T), func);
+			_reMapper.AddToGenerators(typeof(T), ExpressionHelper.GetInstanceFunc<T>());
 		}
 
+		internal void BuildConvertersForGenerics()
+		{
+			var converter = _reMapper.GetConverter<TSource, TResult>();
 
+			Expression<Func<List<TSource>, List<TResult>>> listExpression = list =>
+				list.Select(c => converter(c)).ToList();
+
+			Expression<Func<IEnumerable<TSource>, IEnumerable<TResult>>> enumerableExpression = list =>
+				list.Select(c => converter(c)).AsEnumerable();
+
+			_reMapper.AddToConverters((typeof(List<TSource>), typeof(List<TResult>)), listExpression);
+			
+			_reMapper.AddToConverters((typeof(IEnumerable<TSource>), typeof(IEnumerable<TResult>)), enumerableExpression);
+		}
 	}
 }
