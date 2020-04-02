@@ -41,31 +41,46 @@ namespace ReMap.ExpressionHelpers
 			var statements = new List<Expression>();
 			foreach (var propertyInfo in properties)
 			{
-				var sourceProperty = Expression.Property(source, propertyInfo.SourceProperty);
+				
 				var targetProperty = Expression.Property(target, propertyInfo.TargetProperty);
-				Expression value = sourceProperty;
+				
+				Expression value;
 
 				Expression statement;
-				if (propertyInfo.MappingFunc != null)
+				if (propertyInfo.SourceProperty == null && propertyInfo.MappingFunc != null)
 				{
-					var expr = Expression.Invoke(propertyInfo.MappingFunc, value);
+					var expr = Expression.Invoke(propertyInfo.MappingFunc, source);
 					value = expr;
-					
 
 					statement = Expression.Assign(targetProperty, value);
 				}
 				else
 				{
-					if (value.Type != targetProperty.Type)
-						value = Expression.Convert(value, targetProperty.Type);
-					statement = Expression.Assign(targetProperty, value);
+					var sourceProperty = Expression.Property(source, propertyInfo.SourceProperty);
+					value = sourceProperty;
 
-					if (!sourceProperty.Type.IsValueType || Nullable.GetUnderlyingType(sourceProperty.Type) != null)
+					if (propertyInfo.MappingFunc != null)
 					{
-						var valueNotNull = Expression.NotEqual(sourceProperty, Expression.Constant(null, sourceProperty.Type));
-						statement = Expression.IfThen(valueNotNull, statement);
+						var expr = Expression.Invoke(propertyInfo.MappingFunc, value);
+						value = expr;
+
+						statement = Expression.Assign(targetProperty, value);
+					}
+					else
+					{
+						if (value.Type != targetProperty.Type)
+							value = Expression.Convert(value, targetProperty.Type);
+						statement = Expression.Assign(targetProperty, value);
+
+						if (!sourceProperty.Type.IsValueType || Nullable.GetUnderlyingType(sourceProperty.Type) != null)
+						{
+							var valueNotNull = Expression.NotEqual(sourceProperty, Expression.Constant(null, sourceProperty.Type));
+							statement = Expression.IfThen(valueNotNull, statement);
+						}
 					}
 				}
+
+				
 
 				statements.Add(statement);
 			}

@@ -39,7 +39,7 @@ namespace ReMap.Classes
 					sourceProperty = typeof(TSource).GetProperty(property.SourcePropertyName);
 				}
 
-				if (sourceProperty == null)
+				if (sourceProperty == null && property.MappingFunc == null)
 				{
 					throw new ArgumentNullException(nameof(sourceProperty));
 				}
@@ -80,6 +80,11 @@ namespace ReMap.Classes
 			BuildGenerators<TResult>();
 
 			return _reMapper;
+		}
+
+		internal MapBuilder<TResult, TSource> ReverseMapper()
+		{
+			return new MapBuilder<TResult, TSource>(_reMapper);
 		}
 
 		internal void BuildGenerators<T>()

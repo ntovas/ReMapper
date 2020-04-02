@@ -9,17 +9,17 @@ namespace ReMap.Extensions
 {
 	public static class MapBuilderExtensions
 	{
-		public static MapBuilder<TSource, TResult> Add<TSource, TResult>(
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult>(
 			this MapBuilder<TSource, TResult> builder,
-			Expression<Func<TSource, object>> source)
+			Expression<Func<TSource, object>> from)
 		{
-			var property = ExpressionHelper.GetPropertyFromExpression(source);
+			var property = ExpressionHelper.GetPropertyFromExpression(from);
 
 			var propertyName = property.Name;
 
 			var prop = new PropertyConfiguration<TSource, TResult>
 			{
-				SourceExpression = source,
+				SourceExpression = from,
 				TargetPropertyName = propertyName
 			};
 
@@ -27,31 +27,31 @@ namespace ReMap.Extensions
 			return builder;
 		}
 
-		public static MapBuilder<TSource, TResult> Add<TSource, TResult>(
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult>(
 			this MapBuilder<TSource, TResult> builder,
-			Expression<Func<TSource, object>> source,
-			Expression<Func<TResult, object>> target)
+			Expression<Func<TSource, object>> from,
+			Expression<Func<TResult, object>> to)
 		{
 			var prop = new PropertyConfiguration<TSource, TResult>
 			{
-				SourceExpression = source,
-				TargetExpression = target
+				SourceExpression = from,
+				TargetExpression = to
 			};
 
 			builder.AddProperty(prop);
 			return builder;
 		}
 
-		public static MapBuilder<TSource, TResult> Add<TSource, TResult,TSourceProp, TResultProp>(
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult,TSourceProp, TResultProp>(
 			this MapBuilder<TSource, TResult> builder,
-			Expression<Func<TSource, TSourceProp>> source,
-			Expression<Func<TResult, TResultProp>> target,
+			Expression<Func<TSource, TSourceProp>> from,
+			Expression<Func<TResult, TResultProp>> to,
 			Expression<Func<TSourceProp, TResultProp>> convert)
 		{
 			var prop = new PropertyConfiguration<TSource, TResult>
 			{
-				SourceExpression = source,
-				TargetExpression = target,
+				SourceExpression = from,
+				TargetExpression = to,
 				MappingFunc = convert
 			};
 
@@ -59,36 +59,51 @@ namespace ReMap.Extensions
 			return builder;
 		}
 
-		public static MapBuilder<TSource, TResult> Add<TSource, TResult>(
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult, TResultProp>(
 			this MapBuilder<TSource, TResult> builder,
-			string source)
+			Expression<Func<TResult, TResultProp>> to,
+			Expression<Func<TSource, TResultProp>> convert)
 		{
 			var prop = new PropertyConfiguration<TSource, TResult>
 			{
-				SourcePropertyName = source,
-				TargetPropertyName = source
+				TargetExpression = to,
+				MappingFunc = convert
 			};
 
 			builder.AddProperty(prop);
 			return builder;
 		}
 
-		public static MapBuilder<TSource, TResult> Add<TSource, TResult>(
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult>(
 			this MapBuilder<TSource, TResult> builder,
-			string source,
-			string target)
+			string from)
 		{
 			var prop = new PropertyConfiguration<TSource, TResult>
 			{
-				SourcePropertyName = source,
-				TargetPropertyName = target
+				SourcePropertyName = from,
+				TargetPropertyName = from
+			};
+
+			builder.AddProperty(prop);
+			return builder;
+		}
+
+		public static MapBuilder<TSource, TResult> MapField<TSource, TResult>(
+			this MapBuilder<TSource, TResult> builder,
+			string from,
+			string to)
+		{
+			var prop = new PropertyConfiguration<TSource, TResult>
+			{
+				SourcePropertyName = from,
+				TargetPropertyName = to
 			};
 
 			builder.AddProperty(prop);
 			return builder;
 		}
 		
-		public static MapBuilder<TSource, TResult> AddAll<TSource, TResult>(
+		public static MapBuilder<TSource, TResult> MapAll<TSource, TResult>(
 			this MapBuilder<TSource, TResult> builder,
 			string[] exclude = null)
 		{
@@ -102,12 +117,19 @@ namespace ReMap.Extensions
 
 			foreach (var sourceProperty in sourceProperties)
 			{
-				builder.Add(sourceProperty.Name);
+				builder.MapField(sourceProperty.Name);
 			}
 
 			return builder;
 		}
 
+
+		public static MapBuilder<TResult, TSource> Reverse<TSource, TResult>(this MapBuilder<TSource, TResult> builder)
+		{
+			builder.BuildMapping();
+
+			return builder.ReverseMapper();
+		}
 
 		public static ReMapper Build<TSource, TResult>(this MapBuilder<TSource, TResult> builder)
 		{

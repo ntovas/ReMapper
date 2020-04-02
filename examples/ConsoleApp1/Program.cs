@@ -17,23 +17,27 @@ namespace ConsoleApp1
 
 			var mapper = new ReMapper();
 			mapper.AddBuilder<Test, Test2>()
-			.Add("Id")
-			.Add(c => c.Number,
+			.MapField("Id")
+			.MapField(c => c.Number,
 				c => c.Number,
 				c => c.ToString())
-			.Add("FirstName", "Name")
+			.MapField("FirstName", "Name")
+			.Reverse()
+			
 			.Build();
 
 			mapper.AddBuilder<TestList, TestList2>()
-			.Add("Name")
-			.Add(c => c.List,
-				c => c.Count,
-				c => c.Count)
-			.Add(c => c.List,
+			.MapField("Name")
+			.MapField(to:c=> c.Count, convert:c=> c.List.Count)
+			.MapField(c => c.List,
 				c => c.List,
 				 c => 
 					c.Select(i=> 
 						mapper.Convert<Test,Test2>(i)).ToList())
+			.Reverse()
+			.MapAll(new []{"List"})
+			.MapField(to:c=> c.List, list2 => 
+				list2.List.Select(c=> mapper.Convert<Test2, Test>(c)).ToList())
 			.Build();
 
 			var test = new Test
@@ -54,7 +58,9 @@ namespace ConsoleApp1
 			mapper.Convert(test, test2);
 
 			var testlist2 = mapper.Convert<TestList, TestList2>(list);
-			
+
+			var testlist = mapper.Convert<TestList2, TestList>(testlist2);
+
 			Console.ReadLine();
 		}
 	}
