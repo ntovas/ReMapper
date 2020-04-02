@@ -31,8 +31,9 @@ namespace ConsoleApp1
 				c => c.Count)
 			.Add(c => c.List,
 				c => c.List,
-				c=> c.Select(i=>
-					mapper.Convert<Test, Test2>(i)).ToList())
+				 c => 
+					c.Select(i=> 
+						mapper.Convert<Test,Test2>(i)).ToList())
 			.Build();
 
 			var test = new Test
@@ -48,6 +49,9 @@ namespace ConsoleApp1
 				List = new List<Test> { test }
 			};
 
+			var test2 = new Test2();
+
+			mapper.Convert(test, test2);
 
 			var testlist2 = mapper.Convert<TestList, TestList2>(list);
 			
@@ -60,6 +64,7 @@ namespace ConsoleApp1
 		public string Id { get; set; }
 		public int Number { get; set; }
 		public string FirstName { get; set; }
+
 	}
 
 	public class Test2

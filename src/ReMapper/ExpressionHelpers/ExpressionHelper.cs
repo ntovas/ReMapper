@@ -50,6 +50,8 @@ namespace ReMap.ExpressionHelpers
 				{
 					var expr = Expression.Invoke(propertyInfo.MappingFunc, value);
 					value = expr;
+					
+
 					statement = Expression.Assign(targetProperty, value);
 				}
 				else

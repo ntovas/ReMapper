@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace ReMap
 {
@@ -8,6 +9,7 @@ namespace ReMap
 		private static Dictionary<(Type, Type), Delegate> _converters;
 		private static Dictionary<Type, Delegate> _generators;
 
+		private static bool _initialized = false;
 		public ReMapper()
 		{
 			_converters = new Dictionary<(Type, Type), Delegate>();
@@ -39,9 +41,8 @@ namespace ReMap
 				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
 			}
 
-			var converter = _converters[key];
+			((Action<TSource, TResult>)_converters[key]).Invoke(source, result);
 
-			((Action<TSource, TResult>)converter).Invoke(source, result);
 		}
 
 		public TResult Convert<TSource, TResult>(TSource source)
@@ -53,13 +54,13 @@ namespace ReMap
 				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
 			}
 
-			var converter = _converters[key];
-
 			var result = GetInstance<TResult>();
-			((Action<TSource, TResult>)converter).Invoke(source, result);
+
+			Convert(source, result);
 
 			return result;
 		}
+
 
 		private T GetInstance<T>()
 		{
