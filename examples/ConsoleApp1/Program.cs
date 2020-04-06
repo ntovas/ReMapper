@@ -84,7 +84,7 @@ namespace ConsoleApp1
 
 			var test2 = new Test2();
 
-			mapper.Convert(test, test2);
+			var test3 = mapper.Convert(test, test2);
 
 			var testlist2 = mapper.Convert<TestList, TestList2>(list);
 

@@ -33,12 +33,15 @@ namespace ReMap.ExpressionHelpers
 			throw new ArgumentException();
 		}
 
-		public static Action<TSource, TTarget> BuildMapAction<TSource, TTarget>(IEnumerable<MappedProperty<TSource, TTarget>> properties)
+		public static Func<TSource, TTarget, TTarget> BuildMapAction<TSource, TTarget>(IEnumerable<MappedProperty<TSource, TTarget>> properties)
 		{
 			var source = Expression.Parameter(typeof(TSource), "source");
 			var target = Expression.Parameter(typeof(TTarget), "target");
 
+			var result = Expression.Variable(typeof(TTarget));
+			
 			var statements = new List<Expression>();
+
 			foreach (var propertyInfo in properties)
 			{
 				
@@ -84,17 +87,24 @@ namespace ReMap.ExpressionHelpers
 			}
 
 			var body = statements.Count == 1 ? statements[0] : Expression.Block(statements);
+			
 			if (!source.Type.IsValueType)
 			{
 				var sourceNotNull = Expression.NotEqual(source, Expression.Constant(null, source.Type));
 				body = Expression.IfThen(sourceNotNull, body);
 			}
 
+			var assign = Expression.Assign(result, target);
+			body =  Expression.Block(new[] {result}, new List<Expression>()
+			{
+				body, assign
+			});
+
 			if (body.CanReduce)
 				body = body.ReduceAndCheck();
 			body = body.ReduceExtensions();
 
-			var lambda = Expression.Lambda<Action<TSource, TTarget>>(body, source, target);
+			var lambda = Expression.Lambda<Func<TSource, TTarget, TTarget>>(body, source, target);
 
 			return lambda.Compile();
 		}

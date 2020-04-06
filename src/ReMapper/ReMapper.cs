@@ -66,7 +66,7 @@ namespace ReMap
 			return _converters[key];
 		}
 
-		public void Convert<T, R>(T source, R result)
+		public R Convert<T, R>(T source, R result)
 		{
 			var key = (typeof(T), typeof(R));
 
@@ -75,8 +75,7 @@ namespace ReMap
 				throw new KeyNotFoundException($"{key.Item1.Name}->{key.Item2.Name}");
 			}
 
-			((Action<T, R>)_mappers[key]).Invoke(source, result);
-
+			return ((Func<T, R, R>)_mappers[key]).Invoke(source, result);
 		}
 
 		public R Convert<T, R>(T source)
@@ -95,9 +94,7 @@ namespace ReMap
 
 			var result = GetInstance<R>();
 
-			Convert(source, result);
-
-			return result;
+			return ((Func<T, R, R>)_mappers[key]).Invoke(source, result); ;
 		}
 
 
